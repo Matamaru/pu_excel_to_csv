@@ -1,0 +1,26 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Local data outputs
+uploads/
+phonebook.db
+*.db
+*.sqlite
+*.sqlite3
+*.csv
+
+# OS files
+.DS_Store
+Thumbs.db

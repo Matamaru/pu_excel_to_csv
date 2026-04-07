@@ -1,0 +1,22 @@
+[project]
+name = "pu-excel-to-csv"
+version = "0.1.0"
+description = "Medifox Excel importer with SQLite phonebook and CSV export"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "openpyxl>=3.1.2",
+]
+
+[project.scripts]
+medifox-phonebook = "main:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["main"]
+
+[tool.setuptools.package-dir]
+"" = "src"
