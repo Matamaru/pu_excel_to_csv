@@ -1,26 +1,25 @@
 import sqlite3
+import sys
 import tempfile
-import types
 import unittest
 from pathlib import Path
-import sys
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
-sys.modules.setdefault("openpyxl", types.ModuleType("openpyxl"))
 
-import main  # noqa: E402
+from phonebook import db  # noqa: E402
+from phonebook.models import CustomerRecord  # noqa: E402
 
 
-class HubAwarePhonebookTests(unittest.TestCase):
+class HubAwareSyncTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tempdir = tempfile.TemporaryDirectory()
-        self.original_uploads_dir = main.UPLOADS_DIR
-        main.UPLOADS_DIR = Path(self.tempdir.name) / "uploads"
+        self.original_uploads_dir = db.UPLOADS_DIR
+        db.UPLOADS_DIR = Path(self.tempdir.name) / "uploads"
 
     def tearDown(self) -> None:
-        main.UPLOADS_DIR = self.original_uploads_dir
+        db.UPLOADS_DIR = self.original_uploads_dir
         self.tempdir.cleanup()
 
     def test_init_db_migrates_legacy_customers_to_dorsten_hub(self) -> None:
@@ -87,9 +86,9 @@ class HubAwarePhonebookTests(unittest.TestCase):
             (1, "Kontakt", "Karl", "Sohn", "0201 444", "0171 555", "0201444", "0171555"),
         )
 
-        main.init_db(conn)
+        db.init_db(conn)
 
-        hubs = main.list_hubs(conn)
+        hubs = db.list_hubs(conn)
         self.assertEqual(["Dorsten"], [hub.name for hub in hubs])
 
         customer_row = conn.execute(
@@ -106,18 +105,18 @@ class HubAwarePhonebookTests(unittest.TestCase):
 
     def test_sync_customers_only_deactivates_selected_hub(self) -> None:
         conn = sqlite3.connect(":memory:")
-        main.init_db(conn)
+        db.init_db(conn)
 
-        dorsten = main.ensure_hub(conn, "Dorsten")
-        essen = main.ensure_hub(conn, "Essen")
+        dorsten = db.ensure_hub(conn, "Dorsten")
+        essen = db.ensure_hub(conn, "Essen")
 
-        dorsten_first = main.CustomerRecord(lastname="Acker", firstname="Anna", phone="0201 111")
-        dorsten_second = main.CustomerRecord(lastname="Becker", firstname="Berta", phone="0201 222")
-        essen_customer = main.CustomerRecord(lastname="Cramer", firstname="Claus", phone="0201 333")
+        dorsten_first = CustomerRecord(lastname="Acker", firstname="Anna", phone="0201 111")
+        dorsten_second = CustomerRecord(lastname="Becker", firstname="Berta", phone="0201 222")
+        essen_customer = CustomerRecord(lastname="Cramer", firstname="Claus", phone="0201 333")
 
-        main.sync_customers(conn, dorsten.id, [dorsten_first, dorsten_second])
-        main.sync_customers(conn, essen.id, [essen_customer])
-        main.sync_customers(conn, dorsten.id, [dorsten_first])
+        db.sync_customers(conn, dorsten.id, [dorsten_first, dorsten_second])
+        db.sync_customers(conn, essen.id, [essen_customer])
+        db.sync_customers(conn, dorsten.id, [dorsten_first])
 
         rows = conn.execute(
             """
@@ -136,10 +135,10 @@ class HubAwarePhonebookTests(unittest.TestCase):
             rows,
         )
 
-        dorsten_rows = main.fetch_export_rows(conn, [dorsten.id])
-        combined_rows = main.fetch_export_rows(conn, [dorsten.id, essen.id])
+        dorsten_rows = db.fetch_export_rows(conn, [dorsten.id])
+        combined_rows = db.fetch_export_rows(conn, [dorsten.id, essen.id])
 
-        self.assertEqual([("Dorsten", "Acker"),], [(row[0], row[1]) for row in dorsten_rows])
+        self.assertEqual([("Dorsten", "Acker")], [(row[0], row[1]) for row in dorsten_rows])
         self.assertEqual(
             [("Dorsten", "Acker"), ("Essen", "Cramer")],
             [(row[0], row[1]) for row in combined_rows],

@@ -144,8 +144,21 @@ The exported CSV includes a leading `hub` column so combined exports remain trac
 
 ```text
 pu_excel_to_csv/
-  src/main.py
-  tests/test_hub_support.py
+  src/
+    main.py
+    phonebook/
+      __init__.py
+      cli.py
+      db.py
+      exporter.py
+      models.py
+      parsers/
+        __init__.py
+        medifox_report.py
+        tabular.py
+  tests/
+    test_parsers.py
+    test_sync.py
   uploads/
     dorsten/
     essen/
@@ -163,7 +176,7 @@ pu_excel_to_csv/
 Run a quick syntax check:
 
 ```bash
-python -m py_compile src/main.py tests/test_hub_support.py
+python -m py_compile src/main.py src/phonebook/*.py src/phonebook/parsers/*.py tests/test_parsers.py tests/test_sync.py
 ```
 
 Run tests:
@@ -175,6 +188,6 @@ python -m unittest discover -s tests -v
 ## Notes
 
 - sheet type detection is heuristic-based and currently supports `medifox_report` and a generic tabular format
-- if your Medifox export layout differs, extend the parser logic in `src/main.py`
+- if your Medifox export layout differs, extend the parser logic in `src/phonebook/parsers/`
 - contacts are replaced for a customer on each successful import of that customer
 - the database is never deleted automatically
