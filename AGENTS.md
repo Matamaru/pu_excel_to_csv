@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This repository contains a practical terminal utility for importing Medifox Excel outputs into a searchable phonebook database.
+This repository contains a practical desktop utility (Tkinter with terminal fallback) for importing Medifox Excel outputs into a searchable phonebook database.
 
 ## Agent Working Rules
 

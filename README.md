@@ -1,10 +1,12 @@
 # Medifox Excel Phonebook Tool
 
-Terminal-based Python tool to import Medifox Excel exports, keep a synchronized SQLite customer/contact phonebook, and export an active telephone list as CSV.
+Python tool to import Medifox Excel exports, keep a synchronized SQLite customer/contact phonebook, and export an active telephone list as CSV.
 
 ## Features
 
 - Reads Excel files exported from Medifox
+- Tkinter desktop menu (default launcher)
+- Terminal menu fallback if Tkinter cannot start
 - Detects sheet type automatically (currently `medifox_report` and generic tabular format)
 - Stores unique customers with:
   - name
@@ -23,6 +25,7 @@ Terminal-based Python tool to import Medifox Excel exports, keep a synchronized 
   - customer missing from current Excel batch -> inactive
 - Search by phone number (customer and contacts)
 - Export active phone list to CSV
+- Dedicated `uploads/` folder workflow for Excel imports
 
 ## Quick Start
 
@@ -53,13 +56,25 @@ Terminal-based Python tool to import Medifox Excel exports, keep a synchronized 
   medifox-phonebook
    ```
 
+4. If Tkinter cannot start, the app falls back to terminal mode automatically.
+
+## Import Workflow
+
+1. Put export files into `uploads/`.
+2. In the GUI, use one of these options:
+  - Import All From uploads
+  - Select From uploads And Import
+  - Add File(s) And Import
+3. The import sync logic sets `active = 1` for customers in the import batch and `active = 0` for customers not in the current batch.
+
 ## Menu
 
-- 1: Import Excel sheet(s)
-- 2: Search by phone number
-- 3: Export active telephone list CSV
-- 4: Show DB stats
-- 0: Exit
+- Import all Excel files from uploads folder
+- Select files from uploads folder and import
+- Add file(s) to uploads and import directly
+- Search by phone number
+- Export active telephone list CSV
+- Show DB stats
 
 ## Suggested Scaffold
 
@@ -91,6 +106,7 @@ pu_excel_to_csv/
 ## Data File
 
 - SQLite DB is created automatically as `phonebook.db` in the project root.
+- `uploads/` and `phonebook.db` are git-ignored.
 
 ## Notes
 

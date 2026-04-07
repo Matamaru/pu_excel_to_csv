@@ -2,16 +2,18 @@
 
 ## Phase 1 (Done)
 
-- Terminal menu application
+- Tkinter desktop menu application
+- Terminal fallback menu application
 - SQLite schema for customers and contacts
 - Excel sheet type detection (initial)
 - Import synchronization with active/inactive logic
+- Uploads folder workflow (`uploads/`)
 - Phone search (customer + contacts)
 - Active telephone list CSV export
 
 ## Phase 2
 
-- Split monolithic `main.py` into `src/phonebook` package modules
+- Split monolithic `src/main.py` into `src/phonebook` package modules
 - Add unit tests for parser and sync logic
 - Add sample fixture spreadsheets for regression checks
 - Add logging to file for import diagnostics
