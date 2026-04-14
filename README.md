@@ -1,146 +1,102 @@
 # Medifox Excel Phonebook Tool
 
-Desktop-first Python utility for importing Medifox Excel exports into a searchable SQLite phonebook and exporting hub-filtered telephone book CSV files.
+Python tool to import Medifox Excel exports, keep a synchronized SQLite customer/contact phonebook, and export an active telephone list as CSV.
 
-## What It Does
+## Features
 
-- imports Medifox Excel sheets into a local SQLite database
-- keeps customers unique via a computed stable key
-- stores zero to many contacts per customer
-- synchronizes `active` status per hub on each successful import
-- supports multiple hubs such as `Dorsten`, `Essen`, or `Bocholt`
-- exports active telephone lists for one hub, multiple hubs, or all hubs
-- offers a Tkinter UI when available and a terminal fallback otherwise
+- Reads Excel files exported from Medifox
+- Tkinter desktop menu (default launcher)
+- Terminal menu fallback if Tkinter cannot start
+- Detects sheet type automatically (currently `medifox_report` and generic tabular format)
+- Stores unique customers with:
+  - name
+  - firstname
+  - pflegegrad
+  - phone
+  - mobile
+- Stores multiple contacts per customer with:
+  - contact_name
+  - contact_firstname
+  - contact_relation
+  - contact_phone
+  - contact_mobile
+- Synchronizes active status on every import batch:
+  - customer in Excel -> active
+  - customer missing from current Excel batch -> inactive
+- Search by phone number (customer and contacts)
+- Export active phone list to CSV
+- Export deduplicated HalloLena single-phone CSV
+- Dedicated `uploads/` folder workflow for Excel imports
 
-## Hub Model
+## Quick Start
 
-The app now treats each hub as its own import scope.
+1. Create and activate virtual environment:
 
-- each customer belongs to exactly one hub
-- importing hub `Dorsten` only updates `Dorsten`
-- customers missing from the latest import batch for that hub become inactive for that hub
-- customers in other hubs remain unchanged
-- uploads are stored under `uploads/<hub-slug>/`
-- CSV export can combine hubs through checkbox selection in the GUI or multi-select in terminal mode
+   PowerShell:
 
-Legacy single-hub databases are migrated automatically on first start of the hub-aware version. Existing rows are assigned to hub `Dorsten`.
+   ```powershell
+   py -3 -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   ```
 
-## Requirements
+2. Install dependencies:
 
-- Python `>= 3.11`
-- `openpyxl`
-- optional: `tkinter` for the desktop UI
+   ```powershell
+   pip install -e .
+   ```
 
-If `tkinter` is not installed, the program starts in terminal mode automatically.
+3. Run:
 
-## Setup
+   ```powershell
+  python src/main.py
+  ```
 
-### Windows
+  or after install:
 
-```powershell
-py -3 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -e .
-```
+  ```powershell
+  medifox-phonebook
+   ```
 
-### Linux
+4. If Tkinter cannot start, the app falls back to terminal mode automatically.
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
+## Import Workflow
 
-For the Tkinter desktop UI on Debian/Ubuntu, install:
+1. Put export files into `uploads/`.
+2. In the GUI, use one of these options:
+  - Import All From uploads
+  - Select From uploads And Import
+  - Add File(s) And Import
+3. The import sync logic sets `active = 1` for customers in the import batch and `active = 0` for customers not in the current batch.
 
-```bash
-sudo apt install python3-tk
-```
+## Menu
 
-If you also need venv support on a minimal system:
-
-```bash
-sudo apt install python3-venv
-```
-
-## Run
-
-From the repo:
-
-```bash
-python src/main.py
-```
-
-Or after editable install:
-
-```bash
-medifox-phonebook
-```
-
-## Typical Workflow
-
-### 1. Create A Hub
-
-Create a hub before the first import, for example:
-
-- `Dorsten`
-- `Essen`
-- `Bocholt`
-
-The app creates a matching uploads folder automatically.
-
-### 2. Import Excel Files For That Hub
-
-You can:
-
-- import all Excel files from that hub's uploads folder
-- choose selected files from that hub's uploads folder
-- add external files into that hub's uploads folder and import them
-- import files directly from arbitrary paths
-
-Unknown Excel formats are handled as non-fatal parse errors. Other valid files in the batch still continue.
-
-### 3. Search
-
-Phone number search checks:
-
-- customer phone
-- customer mobile
-- contact phone
-- contact mobile
-
-Search results show the hub and whether the customer is active or inactive.
-
-### 4. Export Telephone Book CSV
-
-CSV export includes active customers only.
-
-- GUI: select one or more hubs with checkboxes
-- terminal: select one, many, or `all`
-
-The exported CSV includes a leading `hub` column so combined exports remain traceable.
-
-## Menus
-
-### GUI
-
-- Create Hub
-- Import All From Hub uploads
-- Select From Hub uploads And Import
-- Add File(s) To Hub And Import
-- Search By Phone
-- Export Active CSV By Hubs
-- Show DB Stats
-
-### Terminal
-
-- Upload / Import Excel sheet(s)
+- Import all Excel files from uploads folder
+- Select files from uploads folder and import
+- Add file(s) to uploads and import directly
 - Search by phone number
 - Export active telephone list CSV
+- Export HalloLena single phone list CSV
 - Show DB stats
-- Create hub
 
-## File Layout
+## HalloLena Format
+
+- File content is flattened to one person-phone per row (customers and contacts).
+- Duplicate rows are removed.
+- Output columns are:
+  - `phone_e164`
+  - `first_name`
+  - `last_name`
+  - `email` (currently empty)
+
+Example header:
+
+```csv
+"phone_e164","first_name","last_name","email"
+```
+
+## Suggested Scaffold
+
+A suggested next step if you want a larger maintainable structure:
 
 ```text
 pu_excel_to_csv/
@@ -150,44 +106,27 @@ pu_excel_to_csv/
       __init__.py
       cli.py
       db.py
-      exporter.py
-      models.py
       parsers/
         __init__.py
         medifox_report.py
         tabular.py
+      models.py
+      exporter.py
+  pyproject.toml
+  README.md
+  AGENTS.md
+  ROADMAP.md
   tests/
     test_parsers.py
     test_sync.py
-  uploads/
-    dorsten/
-    essen/
-  phonebook.db
 ```
 
-## Data Files
+## Data File
 
-- the SQLite database is created as `phonebook.db` in the project root
-- uploads are stored under `uploads/`
-- `uploads/` and `phonebook.db` are git-ignored
-
-## Development
-
-Run a quick syntax check:
-
-```bash
-python -m py_compile src/main.py src/phonebook/*.py src/phonebook/parsers/*.py tests/test_parsers.py tests/test_sync.py
-```
-
-Run tests:
-
-```bash
-python -m unittest discover -s tests -v
-```
+- SQLite DB is created automatically as `phonebook.db` in the project root.
+- `uploads/` and `phonebook.db` are git-ignored.
 
 ## Notes
 
-- sheet type detection is heuristic-based and currently supports `medifox_report` and a generic tabular format
-- if your Medifox export layout differs, extend the parser logic in `src/phonebook/parsers/`
-- contacts are replaced for a customer on each successful import of that customer
-- the database is never deleted automatically
+- Sheet categorization is heuristic-based and can be extended for additional Medifox export variants.
+- If your export layout differs, add parser rules in `src/main.py` (or split into parser modules as per scaffold).
